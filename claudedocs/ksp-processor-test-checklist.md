@@ -1,6 +1,6 @@
 # KSP Processor Test Implementation Checklist
 
-**Total Tests: 185+ | Existing: 3 | Remaining: 182+**
+**Total Tests: 176 | Existing: 3 | Remaining: 173**
 
 ---
 
