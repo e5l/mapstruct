@@ -11,7 +11,7 @@ This document provides a comprehensive plan for implementing missing tests in th
 | **Test Classes** | 518 | 2 |
 | **Test Categories** | 71+ | 2 |
 | **Test Methods** | ~3,000+ | 3 |
-| **Coverage** | Comprehensive | ~0.1% |
+| **Coverage (by test methods)** | Comprehensive | ~0.1% (3 of ~3,000+ methods) |
 
 ### Test Categories Overview
 
