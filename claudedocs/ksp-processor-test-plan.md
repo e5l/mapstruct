@@ -567,7 +567,7 @@ pluginTest("""
 | Phase 2 | 12 | 60+ | - |
 | Phase 3 | 3 | 25+ | - |
 | Phase 4 | 5 | 20+ | - |
-| **Total** | **30** | **185+** | - |
+| **Total** | **30** | **176** | - |
 
 ### Quality Gates
 
