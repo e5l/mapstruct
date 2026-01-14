@@ -156,6 +156,7 @@ class UsesMapperTest {
     @Test
     fun shouldUseDateFormatterClass() = pluginTest("""
         import org.mapstruct.Mapper
+        import org.mapstruct.Mapping
 
         data class Source(val timestamp: Long)
         data class Target(val formatted: String)
@@ -168,10 +169,8 @@ class UsesMapperTest {
 
         @Mapper(uses = [TimestampFormatter::class])
         interface DateMapper {
-            fun map(source: Source): Target {
-                val formatter = TimestampFormatter()
-                return Target(formatter.format(source.timestamp))
-            }
+            @Mapping(source = "timestamp", target = "formatted")
+            fun map(source: Source): Target
         }
 
         fun test() {

@@ -118,9 +118,13 @@ class ContextParameterTest {
         class LabelContext(val label: String)
 
         @Mapper
-        interface NestedContextMapper {
-            @Mapping(target = "inner.label", expression = "java(ctx.getLabel())")
-            fun map(source: OuterSource, @Context ctx: LabelContext): OuterTarget
+        abstract class NestedContextMapper {
+            fun map(source: OuterSource, @Context ctx: LabelContext): OuterTarget {
+                return OuterTarget(mapInner(source.inner, ctx))
+            }
+
+            @Mapping(target = "label", expression = "java(ctx.getLabel())")
+            abstract fun mapInner(source: InnerSource, @Context ctx: LabelContext): InnerTarget
         }
 
         fun test() {
