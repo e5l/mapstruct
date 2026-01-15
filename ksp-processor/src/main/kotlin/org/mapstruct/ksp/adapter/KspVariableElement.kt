@@ -30,10 +30,11 @@ class KspVariableElement : VariableElement {
         private val primitiveTypeCache = mutableMapOf<TypeKind, KspPrimitiveType>()
 
         /**
-         * Creates appropriate TypeMirror for a KSType, handling primitive types.
+         * Creates appropriate TypeMirror for a KSType, handling primitive types and void.
          * Kotlin primitive types (Int, Long, etc.) are represented as their Java boxed equivalents
          * in KSP, but MapStruct needs primitive types for non-nullable Kotlin primitives.
          * Nullable Kotlin primitives (Boolean?, Int?, etc.) must be boxed in Java.
+         * Kotlin Unit is mapped to Java void.
          */
         private fun createTypeMirrorForType(
             ksType: com.google.devtools.ksp.symbol.KSType,
@@ -46,11 +47,16 @@ class KspVariableElement : VariableElement {
                 return KspNoType(TypeKind.NONE)
             }
 
-            // Check if this is a Kotlin built-in primitive type
+            // Check if this is a Kotlin built-in primitive type or Unit
             // BUT: Only use primitive if NOT nullable (nullable types must be boxed in Java)
             val builtins = resolver.builtIns
             val starProjectedType = decl.asStarProjectedType()
             val isNullable = ksType.isMarkedNullable
+
+            // Handle Unit -> void mapping (Unit is never nullable in the meaningful sense)
+            if (starProjectedType == builtins.unitType) {
+                return KspNoType(TypeKind.VOID)
+            }
 
             val primitiveKind = if (!isNullable) {
                 when (starProjectedType) {
@@ -75,7 +81,8 @@ class KspVariableElement : VariableElement {
                 KspTypeMirror(
                     KspClassTypeElement(decl, resolver, logger),
                     resolver,
-                    logger
+                    logger,
+                    ksType  // Pass the KSType to preserve type arguments
                 )
             }
         }
@@ -151,7 +158,8 @@ class KspVariableElement : VariableElement {
     }
 
     private val _annotationMirrors by lazy {
-        toAnnotationMirrors(annotated.annotations.toList(), resolver, logger)
+        val annotations = annotated.annotations.toList()
+        toAnnotationMirrors(annotations, resolver, logger)
     }
 
     override fun getAnnotationMirrors(): List<AnnotationMirror> = _annotationMirrors

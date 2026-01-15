@@ -2,6 +2,8 @@ package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
@@ -13,7 +15,8 @@ import javax.lang.model.type.TypeVisitor
 class KspTypeMirror(
     val element: KspClassTypeElement,
     private val resolver: Resolver,
-    private val logger: KSPLogger
+    private val logger: KSPLogger,
+    private val ksType: KSType? = null
 ) : DeclaredType {
 
     override fun getKind(): TypeKind {
@@ -30,6 +33,24 @@ class KspTypeMirror(
     }
 
     override fun getTypeArguments(): List<TypeMirror> {
+        // If we have the actual KSType with resolved type arguments, use those
+        if (ksType != null && ksType.arguments.isNotEmpty()) {
+            return ksType.arguments.mapNotNull { typeArg ->
+                val resolvedType = typeArg.type?.resolve() ?: return@mapNotNull null
+                val typeDecl = resolvedType.declaration
+                when (typeDecl) {
+                    is KSClassDeclaration -> KspTypeMirror(
+                        KspClassTypeElement(typeDecl, resolver, logger),
+                        resolver,
+                        logger,
+                        resolvedType
+                    )
+                    is KSTypeParameter -> KspTypeVar(typeDecl, resolver, logger)
+                    else -> null
+                }
+            }
+        }
+        // Fallback to type parameters from declaration (for backward compatibility)
         return element.declaration.typeParameters.map { typeParameter: KSTypeParameter ->
             KspTypeVar(typeParameter, resolver, logger)
         }
@@ -58,6 +79,10 @@ class KspTypeMirror(
 
     override fun hashCode(): Int = element.hashCode()
 
-    override fun toString(): String = "KspTypeMirror[${element.declaration}]"
+    override fun toString(): String {
+        // The gem library compares annotation types using toString(), expecting the qualified name
+        val qualifiedName = element.qualifiedName?.toString()
+        return qualifiedName ?: "KspTypeMirror[${element.declaration}]"
+    }
 }
 

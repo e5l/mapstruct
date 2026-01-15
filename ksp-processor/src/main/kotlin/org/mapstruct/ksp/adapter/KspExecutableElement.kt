@@ -77,10 +77,11 @@ class KspExecutableElement(
         private val primitiveTypeCache = mutableMapOf<javax.lang.model.type.TypeKind, KspPrimitiveType>()
 
         /**
-         * Creates appropriate TypeMirror for a KSType, handling primitive types.
+         * Creates appropriate TypeMirror for a KSType, handling primitive types and void.
          * Kotlin primitive types (Int, Long, etc.) are represented as their Java boxed equivalents
          * in KSP, but MapStruct needs primitive types for non-nullable Kotlin primitives.
          * Nullable Kotlin primitives (Boolean?, Int?, etc.) must be boxed in Java.
+         * Kotlin Unit is mapped to Java void.
          */
         private fun createTypeMirrorForType(
             ksType: com.google.devtools.ksp.symbol.KSType,
@@ -93,11 +94,16 @@ class KspExecutableElement(
                 return KspNoType(javax.lang.model.type.TypeKind.NONE)
             }
 
-            // Check if this is a Kotlin built-in primitive type
+            // Check if this is a Kotlin built-in primitive type or Unit
             // BUT: Only use primitive if NOT nullable (nullable types must be boxed in Java)
             val builtins = resolver.builtIns
             val starProjectedType = decl.asStarProjectedType()
             val isNullable = ksType.isMarkedNullable
+
+            // Handle Unit -> void mapping (Unit is never nullable in the meaningful sense)
+            if (starProjectedType == builtins.unitType) {
+                return KspNoType(javax.lang.model.type.TypeKind.VOID)
+            }
 
             val primitiveKind = if (!isNullable) {
                 when (starProjectedType) {
@@ -169,7 +175,17 @@ class KspExecutableElement(
     }
 
     override fun isDefault(): Boolean {
-        return false
+        // A default method is an interface method that has an implementation
+        return when (val decl = declaration) {
+            is KSFunctionDeclaration -> {
+                val parent = decl.parentDeclaration
+                // Check if parent is an interface and method is not abstract (has body)
+                parent is com.google.devtools.ksp.symbol.KSClassDeclaration &&
+                    parent.classKind == com.google.devtools.ksp.symbol.ClassKind.INTERFACE &&
+                    !decl.isAbstract
+            }
+            else -> false
+        }
     }
 
     override fun getThrownTypes(): List<TypeMirror> {
@@ -262,7 +278,8 @@ class KspExecutableElement(
     }
 
     private val _annotationMirrors by lazy {
-        toAnnotationMirrors(declaration.annotations.toList(), resolver, logger)
+        val annotations = declaration.annotations.toList()
+        toAnnotationMirrors(annotations, resolver, logger)
     }
 
     override fun getAnnotationMirrors(): List<AnnotationMirror> = _annotationMirrors

@@ -67,19 +67,38 @@ public class MethodMatcher {
 
         GenericAnalyser analyser =
             new GenericAnalyser( typeFactory, typeUtils, candidateMethod, sourceTypes, targetType );
+
+        System.err.println("[DEBUG] MethodMatcher.matches: method=" + candidateMethod.getName() +
+            ", sourceTypes=" + sourceTypes + ", targetType=" + targetType);
+
         if ( !analyser.lineUp() ) {
+            System.err.println("[DEBUG] MethodMatcher.matches: lineUp failed");
             return false;
         }
 
+        System.err.println("[DEBUG] MethodMatcher.matches: candidateParTypes=" + analyser.candidateParTypes);
+
         for ( int i = 0; i < sourceTypes.size(); i++ ) {
+            Type sourceType = sourceTypes.get( i );
             Type candidateSourceParType = analyser.candidateParTypes.get( i );
-            if ( !sourceTypes.get( i ).isAssignableTo( candidateSourceParType )
-                || isPrimitiveToObject( sourceTypes.get( i ), candidateSourceParType ) ) {
+            boolean isAssignable = sourceType.isAssignableTo( candidateSourceParType );
+            boolean isPrimToObj = isPrimitiveToObject( sourceType, candidateSourceParType );
+
+            System.err.println("[DEBUG] MethodMatcher.matches: param[" + i + "]: " +
+                "sourceType=" + sourceType + " (" + sourceType.getTypeMirror() + " / " + sourceType.getTypeMirror().getClass().getSimpleName() + "), " +
+                "candidateParType=" + candidateSourceParType + " (" + candidateSourceParType.getTypeMirror() + " / " + candidateSourceParType.getTypeMirror().getClass().getSimpleName() + "), " +
+                "isAssignableTo=" + isAssignable + ", isPrimToObj=" + isPrimToObj);
+
+            if ( !isAssignable || isPrimToObj ) {
                 return false;
             }
         }
         // TODO: TargetType checking should not be part of method selection, it should be in checking the annotation
         // (the relation target / target type, target type being a class)
+
+        System.err.println("[DEBUG] MethodMatcher.matches: checking return type. candidateReturnType=" +
+            analyser.candidateReturnType + " isVoid=" + analyser.candidateReturnType.isVoid() +
+            ", targetType=" + targetType);
 
         if ( !analyser.candidateReturnType.isVoid() ) {
             if ( targetType.isPrimitive() ) {
@@ -90,14 +109,19 @@ public class MethodMatcher {
                 // directly without any casting.
                 // e.g. a Long is assignable to a primitive double
                 // However, in order not to lose information we are not going to allow this
-                return targetType.getBoxedEquivalent()
+                boolean result = targetType.getBoxedEquivalent()
                     .isAssignableTo( analyser.candidateReturnType.getBoxedEquivalent() );
+                System.err.println("[DEBUG] MethodMatcher.matches: primitive targetType, boxed assignable=" + result);
+                return result;
             }
-            if ( !( analyser.candidateReturnType.isAssignableTo( targetType ) ) ) {
+            boolean retAssignable = analyser.candidateReturnType.isAssignableTo( targetType );
+            System.err.println("[DEBUG] MethodMatcher.matches: candidateReturnType.isAssignableTo(targetType)=" + retAssignable);
+            if ( !retAssignable ) {
                 return false;
             }
         }
 
+        System.err.println("[DEBUG] MethodMatcher.matches: returning TRUE");
         return true;
     }
 

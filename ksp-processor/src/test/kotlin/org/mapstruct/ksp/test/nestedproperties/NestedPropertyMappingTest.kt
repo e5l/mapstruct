@@ -15,8 +15,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class NestedPropertyMappingTest {
 
-    // TODO: Fix duplicate target property detection for nested property sources
-    @org.junit.jupiter.api.Disabled("KSP adapter reports false 'duplicate target mapping' for nested properties")
     @Test
     fun shouldMapNestedPropertyToFlat() = pluginTest("""
         import org.mapstruct.Mapper

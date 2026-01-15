@@ -15,8 +15,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class LifecycleCallbackTest {
 
-    // TODO: Investigate if @AfterMapping works with KSP - may need abstract class support
-    @org.junit.jupiter.api.Disabled("KSP adapter may not support @AfterMapping callbacks correctly")
     @Test
     fun shouldInvokeAfterMapping() = pluginTest("""
         import org.mapstruct.Mapper
@@ -54,8 +52,6 @@ class LifecycleCallbackTest {
         }
     """)
 
-    // TODO: Fix callback invocation in KSP - callbacks in interface default methods are not invoked
-    @org.junit.jupiter.api.Disabled("KSP adapter does not invoke @AfterMapping in interface default methods")
     @Test
     fun shouldInvokeAfterMappingWithInterfaceDefaultMethod() = pluginTest("""
         import org.mapstruct.Mapper
@@ -81,6 +77,14 @@ class LifecycleCallbackTest {
 
         fun test() {
             val mapper = CallbackInterfaceMapperImpl()
+
+            // Debug: Print the generated mapper's methods
+            println("Mapper class: ${'$'}{mapper::class.java.name}")
+            println("Declared methods:")
+            mapper::class.java.declaredMethods.forEach { m ->
+                println("  - ${'$'}{m.name}(${'$'}{m.parameterTypes.map { it.simpleName }.joinToString()})")
+            }
+
             val source = Source("test")
             val target = mapper.map(source)
 
@@ -93,8 +97,6 @@ class LifecycleCallbackTest {
         }
     """)
 
-    // TODO: Fix callback invocation in KSP - callbacks in interface default methods are not invoked
-    @org.junit.jupiter.api.Disabled("KSP adapter does not invoke @BeforeMapping in interface default methods")
     @Test
     fun shouldInvokeBeforeMappingWithInterfaceDefaultMethod() = pluginTest("""
         import org.mapstruct.Mapper
@@ -132,8 +134,6 @@ class LifecycleCallbackTest {
         }
     """)
 
-    // TODO: Fix callback invocation in KSP - callbacks in interface default methods are not invoked
-    @org.junit.jupiter.api.Disabled("KSP adapter does not invoke lifecycle callbacks in interface default methods")
     @Test
     fun shouldInvokeBothBeforeAndAfterMapping() = pluginTest("""
         import org.mapstruct.Mapper

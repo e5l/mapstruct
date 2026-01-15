@@ -93,7 +93,8 @@ class KspPropertyAccessorExecutableElement(
                 KspTypeMirror(
                     KspClassTypeElement(decl, resolver, logger),
                     resolver,
-                    logger
+                    logger,
+                    propType  // Pass the KSType to preserve type arguments
                 )
             }
         }

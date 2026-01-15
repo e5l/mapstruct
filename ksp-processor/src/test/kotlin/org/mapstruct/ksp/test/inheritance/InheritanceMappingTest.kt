@@ -89,8 +89,6 @@ class InheritanceMappingTest {
         }
     """)
 
-    // TODO: Fix KSP adapter duplicate target detection for multiple @Mapping annotations
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Target property must not be mapped more than once' with multiple mappings")
     @Test
     fun shouldInheritConfigurationFromBaseMapper() = pluginTest("""
         import org.mapstruct.Mapper

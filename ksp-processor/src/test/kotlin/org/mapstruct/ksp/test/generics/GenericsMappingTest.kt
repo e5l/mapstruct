@@ -10,13 +10,9 @@ import org.mapstruct.ksp.test.pluginTest
 
 /**
  * Tests for generic type mapping with KSP processor.
- *
- * NOTE: Generic collection mapping has issues with KSP adapter type handling.
  */
 class GenericsMappingTest {
 
-    // TODO: Fix KSP adapter to handle generic collection types (List<T>, Set<T>, Map<K,V>)
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Can't generate mapping method for a generic type variable source'")
     @Test
     fun shouldMapWithGenericListProperty() = pluginTest("""
         import org.mapstruct.Mapper
@@ -40,8 +36,6 @@ class GenericsMappingTest {
         }
     """)
 
-    // TODO: Fix KSP adapter to handle nested generic types
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Can't generate mapping method for a generic type variable source'")
     @Test
     fun shouldMapNestedGenericTypes() = pluginTest("""
         import org.mapstruct.Mapper
@@ -72,8 +66,6 @@ class GenericsMappingTest {
         }
     """)
 
-    // TODO: Fix KSP adapter to handle generic Set types
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Can't generate mapping method for a generic type variable source'")
     @Test
     fun shouldMapGenericSetProperty() = pluginTest("""
         import org.mapstruct.Mapper
@@ -100,8 +92,9 @@ class GenericsMappingTest {
         }
     """)
 
-    // TODO: Fix KSP adapter to handle Map with complex value types
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Can't generate mapping method for a generic type variable source'")
+    // This test requires Map value transformation which MapStruct handles differently
+    // The processor needs to iterate the map and convert each value using mapItem method
+    @org.junit.jupiter.api.Disabled("Map value transformation not yet implemented in KSP processor")
     @Test
     fun shouldMapMapWithComplexValueType() = pluginTest("""
         import org.mapstruct.Mapper
@@ -134,8 +127,6 @@ class GenericsMappingTest {
         }
     """)
 
-    // TODO: Fix KSP adapter to handle nullable generic types
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Can't generate mapping method for a generic type variable source'")
     @Test
     fun shouldMapNullableGenericType() = pluginTest("""
         import org.mapstruct.Mapper

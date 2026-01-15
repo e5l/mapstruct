@@ -206,6 +206,22 @@ class MapStructSymbolProcessor(
                 }
 
                 logger.info("Processor ${processor.javaClass.simpleName} completed, model type: ${model?.javaClass?.simpleName}")
+
+                // Debug: Log source methods after MethodRetrievalProcessor
+                if (processor.javaClass.simpleName == "MethodRetrievalProcessor" && model is List<*>) {
+                    val sourceMethods = model as List<*>
+                    logger.info("Source model contains ${sourceMethods.size} methods:")
+                    for (method in sourceMethods) {
+                        val sourceMethod = method as? org.mapstruct.ap.internal.model.source.SourceMethod
+                        if (sourceMethod != null) {
+                            val isLifecycle = sourceMethod.isLifecycleCallbackMethod()
+                            val isAfter = sourceMethod.isAfterMappingMethod()
+                            val isBefore = sourceMethod.isBeforeMappingMethod()
+                            val isAbstract = sourceMethod.isAbstract()
+                            logger.info("  - ${sourceMethod.name}(): isLifecycle=$isLifecycle, isAfter=$isAfter, isBefore=$isBefore, isAbstract=$isAbstract")
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 logger.error("Error in processor ${processor.javaClass.simpleName}: ${e.message}", mapper)
                 logger.exception(e)

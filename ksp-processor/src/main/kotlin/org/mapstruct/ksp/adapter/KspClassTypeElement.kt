@@ -100,7 +100,20 @@ class KspClassTypeElement(
     }
 
     override fun getSimpleName(): Name {
-        return StringName(declaration.simpleName.asString())
+        // Map Kotlin type names to Java equivalents for simple names too
+        val qualifiedName = declaration.qualifiedName?.asString()
+        val mappedQualifiedName = if (qualifiedName != null) {
+            KotlinToJavaTypeMapper.mapToJavaType(qualifiedName)
+        } else {
+            null
+        }
+        val simpleName = if (mappedQualifiedName != null && mappedQualifiedName != qualifiedName) {
+            // Extract simple name from mapped qualified name
+            mappedQualifiedName.substringAfterLast('.')
+        } else {
+            declaration.simpleName.asString()
+        }
+        return StringName(simpleName)
     }
 
     override fun getSuperclass(): TypeMirror {

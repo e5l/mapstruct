@@ -135,9 +135,12 @@ public final class LifecycleMethodResolver {
         MethodSelectors selectors =
             new MethodSelectors( ctx.getTypeUtils(), ctx.getElementUtils(), ctx.getMessager(), ctx.getOptions() );
 
+        SelectionContext selectionContext = SelectionContext.forLifecycleMethods(
+            method, targetType, selectionParameters, ctx.getTypeFactory() );
+
         List<SelectedMethod<SourceMethod>> matchingMethods = selectors.getMatchingMethods(
             callbackMethods,
-            SelectionContext.forLifecycleMethods( method, targetType, selectionParameters, ctx.getTypeFactory() )
+            selectionContext
         );
 
         return toLifecycleCallbackMethodRefs(

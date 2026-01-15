@@ -10,13 +10,11 @@ import org.mapstruct.ksp.test.pluginTest
 
 /**
  * Tests for subclass mapping with KSP processor.
- *
- * NOTE: @SubclassMapping has issues with KSP adapter duplicate source detection.
  */
 class SubclassMappingTest {
 
-    // TODO: Fix KSP adapter to handle multiple @SubclassMapping annotations
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Subclass is already defined as a source'")
+    // TODO: Fix KSP adapter to generate subclass dispatch logic in mapping methods
+    @org.junit.jupiter.api.Disabled("KSP adapter doesn't generate subclass dispatch logic, instantiates abstract type directly")
     @Test
     fun shouldMapSubclassWithSubclassMapping() = pluginTest("""
         import org.mapstruct.Mapper
