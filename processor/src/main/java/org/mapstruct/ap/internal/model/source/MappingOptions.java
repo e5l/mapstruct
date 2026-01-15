@@ -112,7 +112,6 @@ public class MappingOptions extends DelegatingOptions {
         }
 
         String source = mapping.source().getValue();
-        String target = mapping.target().getValue();
         String constant = mapping.constant().getValue();
         String expression = getExpression( mapping, method, messager );
         String defaultExpression = getDefaultExpression( mapping, method, messager );

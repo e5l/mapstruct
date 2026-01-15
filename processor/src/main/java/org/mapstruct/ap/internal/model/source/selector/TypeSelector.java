@@ -72,20 +72,13 @@ public class TypeSelector implements MethodSelector {
 
         Method selectedMethod = selectedMethodInfo.getMethod();
 
-        System.err.println("[DEBUG] getMatchingParameterBinding for method: " + selectedMethod.getName() +
-            ", returnType=" + returnType + ", variants=" + parameterAssignmentVariants.size());
-
         // remove all assignment variants that doesn't match the types from the method
-        matchingParameterAssignmentVariants.removeIf( parameterAssignments -> {
-            List<Type> types = extractTypes( parameterAssignments );
-            boolean matches = selectedMethod.matches( types, returnType );
-            System.err.println("[DEBUG]   Variant types: " + types + " matches=" + matches);
-            return !matches;
-        } );
+        matchingParameterAssignmentVariants.removeIf( parameterAssignments ->
+            !selectedMethod.matches( extractTypes( parameterAssignments ), returnType )
+        );
 
         if ( matchingParameterAssignmentVariants.isEmpty() ) {
             // no matching variants found
-            System.err.println("[DEBUG] No matching variants found for " + selectedMethod.getName());
             return null;
         }
         else if ( matchingParameterAssignmentVariants.size() == 1 ) {
@@ -218,29 +211,16 @@ public class TypeSelector implements MethodSelector {
             Parameter parameter) {
         List<ParameterBinding> result = new ArrayList<>( candidateParameters.size() );
 
-        System.err.println("[DEBUG] findCandidateBindingsForParameter for param: " + parameter.getName() +
-            " isMappingTarget=" + parameter.isMappingTarget() +
-            " isTargetType=" + parameter.isTargetType() +
-            " isMappingContext=" + parameter.isMappingContext());
-
         for ( ParameterBinding candidate : candidateParameters ) {
-            System.err.println("[DEBUG]   Candidate binding: " + candidate.getVariableName() +
-                " isMappingTarget=" + candidate.isMappingTarget() +
-                " isTargetType=" + candidate.isTargetType() +
-                " isMappingContext=" + candidate.isMappingContext() +
-                " type=" + candidate.getType());
-
             if ( parameter.isTargetType() == candidate.isTargetType()
                 && parameter.isMappingTarget() == candidate.isMappingTarget()
                 && parameter.isMappingContext() == candidate.isMappingContext()
                 && parameter.isSourcePropertyName() == candidate.isSourcePropertyName()
                 && parameter.isTargetPropertyName() == candidate.isTargetPropertyName()) {
-                System.err.println("[DEBUG]     -> MATCHED!");
                 result.add( candidate );
             }
         }
 
-        System.err.println("[DEBUG] findCandidateBindingsForParameter result: " + result.size() + " candidates");
         return result;
     }
 
