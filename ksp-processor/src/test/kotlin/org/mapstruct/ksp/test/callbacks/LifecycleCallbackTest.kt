@@ -77,14 +77,6 @@ class LifecycleCallbackTest {
 
         fun test() {
             val mapper = CallbackInterfaceMapperImpl()
-
-            // Debug: Print the generated mapper's methods
-            println("Mapper class: ${'$'}{mapper::class.java.name}")
-            println("Declared methods:")
-            mapper::class.java.declaredMethods.forEach { m ->
-                println("  - ${'$'}{m.name}(${'$'}{m.parameterTypes.map { it.simpleName }.joinToString()})")
-            }
-
             val source = Source("test")
             val target = mapper.map(source)
 

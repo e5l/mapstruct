@@ -60,7 +60,7 @@ class KspExecutableElement(
 
         val returnType = declaration.returnType?.resolve()
         if (returnType != null) {
-            return createTypeMirrorForType(returnType, resolver, logger)
+            return KspTypeUtils.createTypeMirrorForType(returnType, resolver, logger)
         }
         return KspNoType(javax.lang.model.type.TypeKind.NONE)
     }
@@ -69,69 +69,7 @@ class KspExecutableElement(
         check(declaration is KSPropertyDeclaration)
 
         val propType = declaration.type.resolve()
-        return createTypeMirrorForType(propType, resolver, logger)
-    }
-
-    companion object {
-        // Cache primitive type instances for reuse
-        private val primitiveTypeCache = mutableMapOf<javax.lang.model.type.TypeKind, KspPrimitiveType>()
-
-        /**
-         * Creates appropriate TypeMirror for a KSType, handling primitive types and void.
-         * Kotlin primitive types (Int, Long, etc.) are represented as their Java boxed equivalents
-         * in KSP, but MapStruct needs primitive types for non-nullable Kotlin primitives.
-         * Nullable Kotlin primitives (Boolean?, Int?, etc.) must be boxed in Java.
-         * Kotlin Unit is mapped to Java void.
-         */
-        private fun createTypeMirrorForType(
-            ksType: com.google.devtools.ksp.symbol.KSType,
-            resolver: Resolver,
-            logger: KSPLogger
-        ): TypeMirror {
-            val decl = ksType.declaration
-
-            if (decl !is com.google.devtools.ksp.symbol.KSClassDeclaration) {
-                return KspNoType(javax.lang.model.type.TypeKind.NONE)
-            }
-
-            // Check if this is a Kotlin built-in primitive type or Unit
-            // BUT: Only use primitive if NOT nullable (nullable types must be boxed in Java)
-            val builtins = resolver.builtIns
-            val starProjectedType = decl.asStarProjectedType()
-            val isNullable = ksType.isMarkedNullable
-
-            // Handle Unit -> void mapping (Unit is never nullable in the meaningful sense)
-            if (starProjectedType == builtins.unitType) {
-                return KspNoType(javax.lang.model.type.TypeKind.VOID)
-            }
-
-            val primitiveKind = if (!isNullable) {
-                when (starProjectedType) {
-                    builtins.booleanType -> javax.lang.model.type.TypeKind.BOOLEAN
-                    builtins.byteType -> javax.lang.model.type.TypeKind.BYTE
-                    builtins.shortType -> javax.lang.model.type.TypeKind.SHORT
-                    builtins.intType -> javax.lang.model.type.TypeKind.INT
-                    builtins.longType -> javax.lang.model.type.TypeKind.LONG
-                    builtins.charType -> javax.lang.model.type.TypeKind.CHAR
-                    builtins.floatType -> javax.lang.model.type.TypeKind.FLOAT
-                    builtins.doubleType -> javax.lang.model.type.TypeKind.DOUBLE
-                    else -> null
-                }
-            } else {
-                null // Nullable types are always boxed
-            }
-
-            return if (primitiveKind != null) {
-                // Return cached instance to ensure identity equality
-                primitiveTypeCache.getOrPut(primitiveKind) { KspPrimitiveType(primitiveKind) }
-            } else {
-                KspTypeMirror(
-                    KspClassTypeElement(decl, resolver, logger),
-                    resolver,
-                    logger
-                )
-            }
-        }
+        return KspTypeUtils.createTypeMirrorForType(propType, resolver, logger)
     }
 
     override fun getParameters(): List<VariableElement> {
