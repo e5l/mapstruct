@@ -19,7 +19,6 @@ class KspAnnotationMirror(
 ) : AnnotationMirror {
 
     private val annotationTypeImpl: DeclaredType by lazy {
-        logger.info("Creating annotation type for $annotation")
         val annoType = annotation.annotationType.resolve()
         val decl = annoType.declaration
         if (decl is KSClassDeclaration) {

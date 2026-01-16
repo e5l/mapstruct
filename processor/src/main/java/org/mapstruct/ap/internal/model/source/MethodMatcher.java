@@ -67,6 +67,7 @@ public class MethodMatcher {
 
         GenericAnalyser analyser =
             new GenericAnalyser( typeFactory, typeUtils, candidateMethod, sourceTypes, targetType );
+
         if ( !analyser.lineUp() ) {
             return false;
         }

@@ -60,7 +60,7 @@ class KspExecutableElement(
 
         val returnType = declaration.returnType?.resolve()
         if (returnType != null) {
-            return createTypeMirrorForType(returnType, resolver, logger)
+            return KspTypeUtils.createTypeMirrorForType(returnType, resolver, logger)
         }
         return KspNoType(javax.lang.model.type.TypeKind.NONE)
     }
@@ -69,63 +69,7 @@ class KspExecutableElement(
         check(declaration is KSPropertyDeclaration)
 
         val propType = declaration.type.resolve()
-        return createTypeMirrorForType(propType, resolver, logger)
-    }
-
-    companion object {
-        // Cache primitive type instances for reuse
-        private val primitiveTypeCache = mutableMapOf<javax.lang.model.type.TypeKind, KspPrimitiveType>()
-
-        /**
-         * Creates appropriate TypeMirror for a KSType, handling primitive types.
-         * Kotlin primitive types (Int, Long, etc.) are represented as their Java boxed equivalents
-         * in KSP, but MapStruct needs primitive types for non-nullable Kotlin primitives.
-         * Nullable Kotlin primitives (Boolean?, Int?, etc.) must be boxed in Java.
-         */
-        private fun createTypeMirrorForType(
-            ksType: com.google.devtools.ksp.symbol.KSType,
-            resolver: Resolver,
-            logger: KSPLogger
-        ): TypeMirror {
-            val decl = ksType.declaration
-
-            if (decl !is com.google.devtools.ksp.symbol.KSClassDeclaration) {
-                return KspNoType(javax.lang.model.type.TypeKind.NONE)
-            }
-
-            // Check if this is a Kotlin built-in primitive type
-            // BUT: Only use primitive if NOT nullable (nullable types must be boxed in Java)
-            val builtins = resolver.builtIns
-            val starProjectedType = decl.asStarProjectedType()
-            val isNullable = ksType.isMarkedNullable
-
-            val primitiveKind = if (!isNullable) {
-                when (starProjectedType) {
-                    builtins.booleanType -> javax.lang.model.type.TypeKind.BOOLEAN
-                    builtins.byteType -> javax.lang.model.type.TypeKind.BYTE
-                    builtins.shortType -> javax.lang.model.type.TypeKind.SHORT
-                    builtins.intType -> javax.lang.model.type.TypeKind.INT
-                    builtins.longType -> javax.lang.model.type.TypeKind.LONG
-                    builtins.charType -> javax.lang.model.type.TypeKind.CHAR
-                    builtins.floatType -> javax.lang.model.type.TypeKind.FLOAT
-                    builtins.doubleType -> javax.lang.model.type.TypeKind.DOUBLE
-                    else -> null
-                }
-            } else {
-                null // Nullable types are always boxed
-            }
-
-            return if (primitiveKind != null) {
-                // Return cached instance to ensure identity equality
-                primitiveTypeCache.getOrPut(primitiveKind) { KspPrimitiveType(primitiveKind) }
-            } else {
-                KspTypeMirror(
-                    KspClassTypeElement(decl, resolver, logger),
-                    resolver,
-                    logger
-                )
-            }
-        }
+        return KspTypeUtils.createTypeMirrorForType(propType, resolver, logger)
     }
 
     override fun getParameters(): List<VariableElement> {
@@ -169,7 +113,17 @@ class KspExecutableElement(
     }
 
     override fun isDefault(): Boolean {
-        return false
+        // A default method is an interface method that has an implementation
+        return when (val decl = declaration) {
+            is KSFunctionDeclaration -> {
+                val parent = decl.parentDeclaration
+                // Check if parent is an interface and method is not abstract (has body)
+                parent is com.google.devtools.ksp.symbol.KSClassDeclaration &&
+                    parent.classKind == com.google.devtools.ksp.symbol.ClassKind.INTERFACE &&
+                    !decl.isAbstract
+            }
+            else -> false
+        }
     }
 
     override fun getThrownTypes(): List<TypeMirror> {
@@ -262,7 +216,8 @@ class KspExecutableElement(
     }
 
     private val _annotationMirrors by lazy {
-        toAnnotationMirrors(declaration.annotations.toList(), resolver, logger)
+        val annotations = declaration.annotations.toList()
+        toAnnotationMirrors(annotations, resolver, logger)
     }
 
     override fun getAnnotationMirrors(): List<AnnotationMirror> = _annotationMirrors

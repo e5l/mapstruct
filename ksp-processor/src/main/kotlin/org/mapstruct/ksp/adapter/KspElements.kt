@@ -27,7 +27,6 @@ class KspElements(
             return typeCache[nameString]
         }
 
-        logger.info("resolve class declaration by name: $name")
         val declaration: KSClassDeclaration = resolver.getClassDeclarationByName(nameString) ?: return null
         val result = KspClassTypeElement(declaration, resolver, logger)
         typeCache[nameString] = result
