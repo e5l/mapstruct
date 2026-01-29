@@ -100,8 +100,6 @@ class ConstantMappingTest {
         }
     """)
 
-    // TODO: Fix constant to Long conversion in KSP adapter
-    @org.junit.jupiter.api.Disabled("KSP adapter has issues with String to Long constant conversion")
     @Test
     fun shouldMapConstantToLong() = pluginTest("""
         import org.mapstruct.Mapper
@@ -112,7 +110,7 @@ class ConstantMappingTest {
 
         @Mapper
         interface ConstantLongMapper {
-            @Mapping(target = "id", constant = "999999999")
+            @Mapping(target = "id", constant = "999999999L")
             fun map(source: Source): Target
         }
 

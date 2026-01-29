@@ -116,8 +116,6 @@ class DefaultValueTest {
         }
     """)
 
-    // TODO: Fix default value to Long conversion in KSP adapter
-    @org.junit.jupiter.api.Disabled("KSP adapter has issues with String to Long default value conversion")
     @Test
     fun shouldMapDefaultValueWithLongConversion() = pluginTest("""
         import org.mapstruct.Mapper
@@ -128,7 +126,7 @@ class DefaultValueTest {
 
         @Mapper
         interface DefaultLongMapper {
-            @Mapping(target = "value", source = "value", defaultValue = "100")
+            @Mapping(target = "value", source = "value", defaultValue = "100L")
             fun map(source: Source): Target
         }
 

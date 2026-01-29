@@ -15,8 +15,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class StreamMappingTest {
 
-    // TODO: Fix KSP adapter to handle generic type variables for Stream mapping
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'Can't generate mapping method for a generic type variable source'")
     @Test
     fun shouldMapStreamToList() = pluginTest("""
         import org.mapstruct.Mapper
