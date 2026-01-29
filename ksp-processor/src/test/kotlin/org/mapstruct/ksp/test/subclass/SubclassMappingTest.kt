@@ -13,8 +13,8 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class SubclassMappingTest {
 
-    // TODO: Fix KSP adapter to generate subclass dispatch logic in mapping methods
-    @org.junit.jupiter.api.Disabled("KSP adapter doesn't generate subclass dispatch logic, instantiates abstract type directly")
+    // @SubclassMapping requires dispatch logic generation - currently generates direct instantiation
+    @org.junit.jupiter.api.Disabled("Generated code tries 'new VehicleDto()' instead of instanceof dispatch to subclass mappers")
     @Test
     fun shouldMapSubclassWithSubclassMapping() = pluginTest("""
         import org.mapstruct.Mapper
