@@ -15,8 +15,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class UpdateMethodTest {
 
-    // TODO: Fix KSP adapter to handle void return types for @MappingTarget update methods
-    @org.junit.jupiter.api.Disabled("KSP adapter error: 'result type not assignable to return type' for void methods")
     @Test
     fun shouldUpdateExistingTarget() = pluginTest("""
         import org.mapstruct.Mapper

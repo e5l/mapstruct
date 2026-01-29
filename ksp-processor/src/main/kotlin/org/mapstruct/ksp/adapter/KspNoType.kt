@@ -14,5 +14,10 @@ class KspNoType(private val noTypeKind: TypeKind) : AbstractKspAnnotatedConstruc
         return v?.visitNoType(this, p)
     }
 
-    override fun toString(): String = "KspNoType[$noTypeKind]"
+    override fun toString(): String = when (noTypeKind) {
+        TypeKind.VOID -> "void"
+        TypeKind.NONE -> "none"
+        TypeKind.PACKAGE -> "package"
+        else -> noTypeKind.name.lowercase()
+    }
 }

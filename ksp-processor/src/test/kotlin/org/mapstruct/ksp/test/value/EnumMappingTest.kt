@@ -15,9 +15,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class EnumMappingTest {
 
-    // TODO: Fix enum constant name resolution in KSP adapter
-    // Currently fails with "Unexpected enum constant: PENDING"
-    @org.junit.jupiter.api.Disabled("KSP adapter has issues with enum constant name resolution")
     @Test
     fun shouldMapEnumToEnum() = pluginTest("""
         import org.mapstruct.Mapper
@@ -121,8 +118,6 @@ class EnumMappingTest {
         }
     """)
 
-    // TODO: Fix enum constant name resolution in KSP adapter
-    @org.junit.jupiter.api.Disabled("KSP adapter has issues with direct enum-to-enum mapping")
     @Test
     fun shouldMapEnumDirectly() = pluginTest("""
         import org.mapstruct.Mapper

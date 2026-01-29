@@ -75,7 +75,12 @@ class KspClassTypeElement(
                 }
 
                 is KSClassDeclaration -> {
-                    elements.add(KspClassTypeElement(child, resolver, logger, sourceElement))
+                    if (child.classKind == ClassKind.ENUM_ENTRY) {
+                        // Enum entries should be exposed as ENUM_CONSTANT VariableElements
+                        elements.add(KspEnumConstantElement(child, resolver, logger))
+                    } else {
+                        elements.add(KspClassTypeElement(child, resolver, logger, sourceElement))
+                    }
                 }
 
                 else -> {
