@@ -13,8 +13,9 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class SubclassMappingTest {
 
-    // @SubclassMapping requires dispatch logic generation - currently generates direct instantiation
-    @org.junit.jupiter.api.Disabled("Generated code tries 'new VehicleDto()' instead of instanceof dispatch to subclass mappers")
+    // @SubclassMapping annotation class values not being processed correctly
+    // Warning shows "ehicleDto" instead of "VehicleDto" - string parsing issue
+    @org.junit.jupiter.api.Disabled("@SubclassMapping annotation processing needs investigation")
     @Test
     fun shouldMapSubclassWithSubclassMapping() = pluginTest("""
         import org.mapstruct.Mapper
