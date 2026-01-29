@@ -39,8 +39,6 @@ class ComponentModelTest {
         }
     """)
 
-    // Spring component test requires Spring on classpath
-    @org.junit.jupiter.api.Disabled("Requires Spring dependency on test classpath")
     @Test
     fun shouldGenerateSpringComponent() = pluginTest("""
         import org.mapstruct.Mapper
