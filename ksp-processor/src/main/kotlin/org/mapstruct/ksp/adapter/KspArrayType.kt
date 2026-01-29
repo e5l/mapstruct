@@ -17,5 +17,5 @@ class KspArrayType(private val componentType: TypeMirror) : AbstractKspAnnotated
         return v?.visitArray(this, p)
     }
 
-    override fun toString(): String = "KspArrayType[$componentType[]]"
+    override fun toString(): String = "$componentType[]"
 }

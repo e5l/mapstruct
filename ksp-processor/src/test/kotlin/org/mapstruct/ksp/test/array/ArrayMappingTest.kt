@@ -16,9 +16,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class ArrayMappingTest {
 
-    // TODO: Fix KSP adapter to properly convert Kotlin array types to Java array types
-    // Currently fails because IntArray generates as "IntArray" in Java instead of "int[]"
-    @org.junit.jupiter.api.Disabled("KSP adapter doesn't properly convert Kotlin array types to Java array types")
     @Test
     fun shouldMapPrimitiveArrayToArray() = pluginTest("""
         import org.mapstruct.Mapper

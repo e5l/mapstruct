@@ -50,6 +50,16 @@ class KspTypes(
         t1 is PrimitiveType && t2 is KspPrimitiveType -> {
             t1.kind == t2.kind
         }
+        // Array type comparison
+        t1 is KspArrayType && t2 is KspArrayType -> {
+            isSameType(t1.componentType, t2.componentType)
+        }
+        t1 is KspArrayType && t2 is ArrayType -> {
+            isSameType(t1.componentType, t2.componentType)
+        }
+        t1 is ArrayType && t2 is KspArrayType -> {
+            isSameType(t1.componentType, t2.componentType)
+        }
         t1 is KspTypeMirror && t2 is KspTypeMirror -> {
             val qn1 = t1.element.qualifiedName?.toString()
             val qn2 = t2.element.qualifiedName?.toString()
@@ -110,6 +120,32 @@ class KspTypes(
         }
         t1 is KspPrimitiveType || t2 is KspPrimitiveType -> {
             // Primitive types are only subtypes of themselves (handled by isSameType above)
+            false
+        }
+        t1 is KspArrayType -> {
+            // Arrays are subtypes of Object, Cloneable, and Serializable, but not Collection
+            when {
+                t2 is KspArrayType -> {
+                    // Array subtyping: T[] <: S[] iff T <: S (for reference types)
+                    // Primitive arrays are invariant: int[] is not a subtype of Object[]
+                    val c1 = t1.componentType
+                    val c2 = t2.componentType
+                    if (c1 is KspPrimitiveType || c2 is KspPrimitiveType) {
+                        isSameType(c1, c2)
+                    } else {
+                        isSubtype(c1, c2)
+                    }
+                }
+                t2 is KspTypeMirror -> {
+                    // All arrays are subtypes of Object, Cloneable, and Serializable
+                    val t2Name = t2.element.qualifiedName?.toString()
+                    t2Name == "java.lang.Object" || t2Name == "java.lang.Cloneable" || t2Name == "java.io.Serializable"
+                }
+                else -> false
+            }
+        }
+        t2 is KspArrayType -> {
+            // Non-array types are not subtypes of arrays (except null, which we don't handle here)
             false
         }
         t1 is KspTypeMirror && t2 is KspTypeMirror -> {

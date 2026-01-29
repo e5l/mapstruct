@@ -17,6 +17,18 @@ object KspTypeUtils {
     // Cache primitive type instances for reuse across all adapter classes
     private val primitiveTypeCache = mutableMapOf<TypeKind, KspPrimitiveType>()
 
+    // Kotlin primitive array types mapped to their Java primitive component type kinds
+    private val kotlinPrimitiveArrayTypes = mapOf(
+        "kotlin.IntArray" to TypeKind.INT,
+        "kotlin.LongArray" to TypeKind.LONG,
+        "kotlin.ShortArray" to TypeKind.SHORT,
+        "kotlin.ByteArray" to TypeKind.BYTE,
+        "kotlin.FloatArray" to TypeKind.FLOAT,
+        "kotlin.DoubleArray" to TypeKind.DOUBLE,
+        "kotlin.BooleanArray" to TypeKind.BOOLEAN,
+        "kotlin.CharArray" to TypeKind.CHAR
+    )
+
     /**
      * Creates appropriate TypeMirror for a KSType, handling primitive types and void.
      * Kotlin primitive types (Int, Long, etc.) are represented as their Java boxed equivalents
@@ -49,6 +61,16 @@ object KspTypeUtils {
         // Handle Unit -> void mapping (Unit is never nullable in the meaningful sense)
         if (starProjectedType == builtins.unitType) {
             return KspNoType(TypeKind.VOID)
+        }
+
+        // Handle Kotlin primitive array types (IntArray, LongArray, etc.) -> Java primitive arrays
+        val qualifiedName = decl.qualifiedName?.asString()
+        val primitiveArrayComponentKind = kotlinPrimitiveArrayTypes[qualifiedName]
+        if (primitiveArrayComponentKind != null) {
+            val componentType = primitiveTypeCache.getOrPut(primitiveArrayComponentKind) {
+                KspPrimitiveType(primitiveArrayComponentKind)
+            }
+            return KspArrayType(componentType)
         }
 
         val primitiveKind = if (!isNullable) {
