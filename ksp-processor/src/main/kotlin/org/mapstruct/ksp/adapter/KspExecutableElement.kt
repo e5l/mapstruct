@@ -33,7 +33,11 @@ class KspExecutableElement(
      * that represents an annotation attribute (Java method in annotation type). KSP exposes
      * default values for such attributes via `KSAnnotation.defaultArguments`.
      */
-    private val annotationInstance: KSAnnotation? = null
+    private val annotationInstance: KSAnnotation? = null,
+    /**
+     * When true, forces the method to appear as static (for companion object @JvmStatic methods).
+     */
+    private val forceStatic: Boolean = false
 ) : ExecutableElement {
 
     override fun getTypeParameters(): List<TypeParameterElement> {
@@ -299,6 +303,11 @@ class KspExecutableElement(
             }
 
             else -> {}
+        }
+
+        // For companion object @JvmStatic methods, add STATIC modifier
+        if (forceStatic) {
+            modifiers.add(Modifier.STATIC)
         }
 
         return modifiers

@@ -15,8 +15,6 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class BuilderMappingTest {
 
-    // Builder pattern detection requires companion object @JvmStatic method exposure
-    @org.junit.jupiter.api.Disabled("KSP adapter doesn't expose companion object @JvmStatic methods as class-level static methods")
     @Test
     fun shouldMapUsingSimpleBuilder() = pluginTest("""
         import org.mapstruct.Mapper

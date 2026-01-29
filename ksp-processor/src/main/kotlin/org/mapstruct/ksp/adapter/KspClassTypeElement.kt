@@ -80,6 +80,18 @@ class KspClassTypeElement(
                         elements.add(KspEnumConstantElement(child, resolver, logger))
                     } else {
                         elements.add(KspClassTypeElement(child, resolver, logger, sourceElement))
+
+                        // For companion objects, expose @JvmStatic methods as static methods on parent
+                        if (child.isCompanionObject) {
+                            for (companionFunc in child.declarations.filterIsInstance<KSFunctionDeclaration>()) {
+                                val hasJvmStatic = companionFunc.annotations.any { anno ->
+                                    anno.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.jvm.JvmStatic"
+                                }
+                                if (hasJvmStatic) {
+                                    elements.add(KspExecutableElement(companionFunc, resolver, logger, forceStatic = true))
+                                }
+                            }
+                        }
                     }
                 }
 
