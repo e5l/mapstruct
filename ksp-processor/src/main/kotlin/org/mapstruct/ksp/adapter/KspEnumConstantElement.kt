@@ -43,7 +43,8 @@ class KspEnumConstantElement(
         val parent = enumEntry.parentDeclaration
         return when (parent) {
             is KSClassDeclaration -> KspClassTypeElement(parent, resolver, logger)
-            else -> error("Unexpected parent type for enum constant: ${parent!!::class.simpleName}")
+            null -> error("Enum constant '${enumEntry.simpleName.asString()}' has no parent declaration")
+            else -> error("Unexpected parent type for enum constant '${enumEntry.simpleName.asString()}': ${parent::class.simpleName}")
         }
     }
 

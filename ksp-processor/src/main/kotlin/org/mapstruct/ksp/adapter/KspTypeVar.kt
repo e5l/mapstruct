@@ -1,3 +1,5 @@
+// ABOUTME: Adapter wrapping KSP type parameters as javax.lang.model TypeVariable instances.
+// ABOUTME: Provides upper/lower bound resolution for generic type parameter handling.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger

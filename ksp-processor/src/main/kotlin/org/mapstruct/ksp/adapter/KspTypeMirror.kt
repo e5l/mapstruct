@@ -1,3 +1,5 @@
+// ABOUTME: Adapter wrapping KSP class declarations as javax.lang.model DeclaredType.
+// ABOUTME: Provides type argument resolution and element access for MapStruct's type system.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger
@@ -16,7 +18,8 @@ class KspTypeMirror(
     val element: KspClassTypeElement,
     private val resolver: Resolver,
     private val logger: KSPLogger,
-    private val ksType: KSType? = null
+    private val ksType: KSType? = null,
+    private val typeArgs: List<TypeMirror>? = null
 ) : DeclaredType {
 
     override fun getKind(): TypeKind {
@@ -33,6 +36,10 @@ class KspTypeMirror(
     }
 
     override fun getTypeArguments(): List<TypeMirror> {
+        // If explicit type arguments were provided (e.g., from getDeclaredType()), use those
+        if (typeArgs != null) {
+            return typeArgs
+        }
         // If we have the actual KSType with resolved type arguments, use those
         if (ksType != null && ksType.arguments.isNotEmpty()) {
             return ksType.arguments.mapNotNull { typeArg ->
@@ -73,7 +80,9 @@ class KspTypeMirror(
     }
 
     override fun equals(other: Any?): Boolean {
-        // Use element.equals() which compares by qualified name, not reference equality
+        // Use element.equals() which compares by qualified name, not reference equality.
+        // Type argument comparison is handled by KspTypes.isSameType() which is the
+        // correct place for full type equality checks per javax.lang.model conventions.
         return other is KspTypeMirror && element == other.element
     }
 

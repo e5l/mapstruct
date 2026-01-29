@@ -1,3 +1,5 @@
+// ABOUTME: Represents Java primitive types (boolean, int, etc.) as javax.lang.model PrimitiveType.
+// ABOUTME: Maps non-nullable Kotlin built-in types to their Java primitive equivalents.
 package org.mapstruct.ksp.adapter
 
 import javax.lang.model.type.PrimitiveType

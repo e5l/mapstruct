@@ -84,7 +84,21 @@ object AnnotationBuilder {
                     }
                 }
                 is com.google.devtools.ksp.symbol.KSAnnotation -> {
-                    null
+                    // Recursively build proxy for nested annotations
+                    val nestedAnnotationType = value.annotationType.resolve()
+                    val nestedQualifiedName = nestedAnnotationType.declaration.qualifiedName?.asString()
+                    if (nestedQualifiedName != null) {
+                        try {
+                            @Suppress("UNCHECKED_CAST")
+                            val nestedClass = Class.forName(nestedQualifiedName) as Class<out Annotation>
+                            buildAnnotation(value, nestedClass, resolver, logger)
+                        } catch (e: ClassNotFoundException) {
+                            logger.warn("Could not load annotation class: $nestedQualifiedName")
+                            null
+                        }
+                    } else {
+                        null
+                    }
                 }
                 is Enum<*> -> value
                 is String, is Boolean, is Byte, is Short, is Int, is Long, is Char, is Float, is Double -> value

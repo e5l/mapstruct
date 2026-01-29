@@ -92,9 +92,6 @@ class GenericsMappingTest {
         }
     """)
 
-    // This test requires Map value transformation which MapStruct handles differently
-    // The processor needs to iterate the map and convert each value using mapItem method
-    @org.junit.jupiter.api.Disabled("Map value transformation not yet implemented in KSP processor")
     @Test
     fun shouldMapMapWithComplexValueType() = pluginTest("""
         import org.mapstruct.Mapper

@@ -1,3 +1,5 @@
+// ABOUTME: Adapter wrapping a component TypeMirror as a javax.lang.model ArrayType.
+// ABOUTME: Represents Java array types in the KSP-to-javax bridging layer.
 package org.mapstruct.ksp.adapter
 
 import javax.lang.model.type.ArrayType

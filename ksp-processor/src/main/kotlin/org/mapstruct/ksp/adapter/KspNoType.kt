@@ -1,3 +1,5 @@
+// ABOUTME: Represents javax.lang.model NoType for void, package, and none type kinds.
+// ABOUTME: Used as a return type placeholder for void methods and missing types.
 package org.mapstruct.ksp.adapter
 
 import javax.lang.model.type.NoType

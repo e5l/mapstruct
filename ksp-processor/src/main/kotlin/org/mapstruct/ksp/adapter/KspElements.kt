@@ -1,3 +1,5 @@
+// ABOUTME: Implements javax.lang.model.util.Elements for KSP element operations.
+// ABOUTME: Provides type lookup, package resolution, and method override detection.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -34,7 +36,28 @@ class KspElements(
     }
 
     override fun getElementValuesWithDefaults(a: AnnotationMirror): Map<out ExecutableElement, AnnotationValue> {
-        TODO("Not yet implemented")
+        val result = mutableMapOf<ExecutableElement, AnnotationValue>()
+
+        // Start with explicitly specified values
+        result.putAll(a.elementValues)
+
+        // Add defaults for any annotation methods not explicitly specified
+        val annotationType = a.annotationType
+        val annotationElement = annotationType.asElement()
+        if (annotationElement is TypeElement) {
+            for (enclosed in annotationElement.enclosedElements) {
+                if (enclosed is ExecutableElement) {
+                    if (!result.containsKey(enclosed)) {
+                        val defaultValue = enclosed.defaultValue
+                        if (defaultValue != null) {
+                            result[enclosed] = defaultValue
+                        }
+                    }
+                }
+            }
+        }
+
+        return result
     }
 
     override fun getDocComment(e: Element): String {
@@ -91,6 +114,25 @@ class KspElements(
         overridden: ExecutableElement,
         type: TypeElement
     ): Boolean {
+        // Handle property accessor elements by comparing accessor names and types
+        if (overrider is KspPropertyAccessorExecutableElement ||
+            overridden is KspPropertyAccessorExecutableElement) {
+            // Property accessors override if they have the same name, same parameter count,
+            // and the enclosing class of the overrider is a subclass of the overridden's class
+            if (overrider.simpleName.toString() != overridden.simpleName.toString()) {
+                return false
+            }
+            if (overrider.parameters.size != overridden.parameters.size) {
+                return false
+            }
+            val overriderEnclosing = overrider.enclosingElement as? KspClassTypeElement ?: return false
+            val overriddenEnclosing = overridden.enclosingElement as? KspClassTypeElement ?: return false
+            if (overriderEnclosing == overriddenEnclosing) {
+                return overrider === overridden
+            }
+            return isSubclass(overriderEnclosing.declaration, overriddenEnclosing.declaration)
+        }
+
         // Extract KSP function declarations from the executable elements
         val overriderFunc = (overrider as? KspExecutableElement)?.declaration
         check(overriderFunc is KSFunctionDeclaration?)

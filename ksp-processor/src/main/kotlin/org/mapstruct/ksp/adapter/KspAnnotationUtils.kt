@@ -2,6 +2,7 @@
 // ABOUTME: Provides centralized annotation handling to ensure consistency across adapter classes
 package org.mapstruct.ksp.adapter
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -9,7 +10,8 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import javax.lang.model.element.AnnotationMirror
 
-private const val REPEATABLE_FQN = "java.lang.annotation.Repeatable"
+private const val JAVA_REPEATABLE_FQN = "java.lang.annotation.Repeatable"
+private const val KOTLIN_REPEATABLE_FQN = "kotlin.annotation.Repeatable"
 
 /**
  * Converts a sequence of KSP annotations to a list of AnnotationMirror instances.
@@ -69,11 +71,25 @@ private fun findRepeatableContainerType(annotation: KSAnnotation, resolver: Reso
     val annoType = annotation.annotationType.resolve()
     val annoDecl = annoType.declaration as? KSClassDeclaration ?: return null
 
-    // Look for @Repeatable annotation on the annotation class
-    val repeatableAnno = annoDecl.annotations.firstOrNull { anno ->
-        anno.annotationType.resolve().declaration.qualifiedName?.asString() == REPEATABLE_FQN
-    } ?: return null
+    // Check for @java.lang.annotation.Repeatable (also covers @kotlin.jvm.JvmRepeatable which is a typealias)
+    val javaRepeatableAnno = annoDecl.annotations.firstOrNull { anno ->
+        anno.annotationType.resolve().declaration.qualifiedName?.asString() == JAVA_REPEATABLE_FQN
+    }
+    if (javaRepeatableAnno != null) {
+        // The value of @Repeatable is the container annotation class
+        return javaRepeatableAnno.arguments.firstOrNull()?.value as? KSType
+    }
 
-    // The value of @Repeatable is the container annotation class
-    return repeatableAnno.arguments.firstOrNull()?.value as? KSType
+    // Check for @kotlin.annotation.Repeatable (auto-generated container named "Container")
+    val kotlinRepeatableAnno = annoDecl.annotations.firstOrNull { anno ->
+        anno.annotationType.resolve().declaration.qualifiedName?.asString() == KOTLIN_REPEATABLE_FQN
+    }
+    if (kotlinRepeatableAnno != null) {
+        // Kotlin auto-generates a container as an inner class named "Container"
+        val annoQName = annoDecl.qualifiedName?.asString() ?: return null
+        val containerDecl = resolver.getClassDeclarationByName("$annoQName.Container")
+        return containerDecl?.asStarProjectedType()
+    }
+
+    return null
 }

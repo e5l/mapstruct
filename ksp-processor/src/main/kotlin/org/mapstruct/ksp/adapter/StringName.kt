@@ -1,3 +1,5 @@
+// ABOUTME: Simple javax.lang.model.element.Name implementation backed by a String.
+// ABOUTME: Used throughout the adapter layer for element and type names.
 package org.mapstruct.ksp.adapter
 
 import javax.lang.model.element.Name

@@ -1,3 +1,5 @@
+// ABOUTME: Adapter representing a Java package as a javax.lang.model PackageElement.
+// ABOUTME: Provides package name resolution for MapStruct's import and type resolution logic.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger

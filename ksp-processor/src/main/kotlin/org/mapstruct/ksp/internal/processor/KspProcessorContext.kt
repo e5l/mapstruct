@@ -77,8 +77,15 @@ data class KspProcessorContext(
         val roundContext = org.mapstruct.ap.internal.util.RoundContext(annotationProcessorContext)
 
         // Get types that should not be imported (inner classes of the mapper)
+        // These are nested classes within the mapper interface that could conflict with imports
         val declaredTypesNotToBeImported = mutableMapOf<String, String>()
-        // For now, leave empty - will be populated if needed
+        for (element in mapperTypeElement.enclosedElements) {
+            if (element is TypeElement) {
+                val simpleName = element.simpleName?.toString() ?: continue
+                val qualifiedName = element.qualifiedName?.toString() ?: continue
+                declaredTypesNotToBeImported[simpleName] = qualifiedName
+            }
+        }
 
         // Create and return DefaultModelElementProcessorContext
         return org.mapstruct.ap.internal.processor.DefaultModelElementProcessorContext(

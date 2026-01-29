@@ -207,7 +207,8 @@ class KspExecutableElement(
             is com.google.devtools.ksp.symbol.KSClassDeclaration ->
                 KspClassTypeElement(parent, resolver, logger)
 
-            else -> error("Unexpected parent type for declaration: ${parent!!::class.simpleName}")
+            null -> error("Declaration '${declaration.simpleName.asString()}' has no parent (top-level declarations are not supported)")
+            else -> error("Unexpected parent type for declaration '${declaration.simpleName.asString()}': ${parent::class.simpleName}")
         }
     }
 

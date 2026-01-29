@@ -1,3 +1,5 @@
+// ABOUTME: Wraps multiple repeatable KSP annotations into a container AnnotationMirror.
+// ABOUTME: Bridges KSP's flat annotation model to Java APT's container-based repeatable annotations.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger

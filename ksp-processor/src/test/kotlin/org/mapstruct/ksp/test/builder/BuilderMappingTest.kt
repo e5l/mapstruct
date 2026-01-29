@@ -15,7 +15,7 @@ import org.mapstruct.ksp.test.pluginTest
  */
 class BuilderMappingTest {
 
-    // TODO: Fix KSP adapter to recognize builder pattern for target construction
+    // Builder pattern detection requires further adapter work beyond erasure fix
     @org.junit.jupiter.api.Disabled("KSP adapter error: 'Target does not have an accessible constructor'")
     @Test
     fun shouldMapUsingSimpleBuilder() = pluginTest("""

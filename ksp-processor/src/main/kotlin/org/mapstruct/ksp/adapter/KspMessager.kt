@@ -1,3 +1,5 @@
+// ABOUTME: Adapter bridging KSP's KSPLogger to javax.annotation.processing.Messager.
+// ABOUTME: Routes diagnostic messages from MapStruct processor through KSP's logging system.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger

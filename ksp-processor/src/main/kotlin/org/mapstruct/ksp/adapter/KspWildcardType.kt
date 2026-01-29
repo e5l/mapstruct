@@ -1,3 +1,5 @@
+// ABOUTME: Represents javax.lang.model WildcardType with extends and super bounds.
+// ABOUTME: Bridges KSP wildcard type arguments to Java's bounded wildcard representation.
 package org.mapstruct.ksp.adapter
 
 import javax.lang.model.type.TypeKind

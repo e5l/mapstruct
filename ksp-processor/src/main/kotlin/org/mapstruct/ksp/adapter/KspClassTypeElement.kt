@@ -1,3 +1,5 @@
+// ABOUTME: Adapter wrapping KSP class declarations as javax.lang.model TypeElement.
+// ABOUTME: Core bridge class exposing Kotlin types to MapStruct's Java-based processor pipeline.
 package org.mapstruct.ksp.adapter
 
 import com.google.devtools.ksp.processing.KSPLogger
@@ -76,7 +78,11 @@ class KspClassTypeElement(
                     elements.add(KspClassTypeElement(child, resolver, logger, sourceElement))
                 }
 
-                else -> error("Unexpected child type for enclosed element: ${child::class.simpleName}")
+                else -> {
+                    // Skip unexpected declaration types (e.g. type aliases) that don't have
+                    // a javax.lang.model equivalent, rather than crashing the processor
+                    logger.warn("Skipping unsupported enclosed declaration type: ${child::class.simpleName} in ${declaration.qualifiedName?.asString()}")
+                }
             }
         }
 
@@ -127,7 +133,7 @@ class KspClassTypeElement(
         return if (superClass != null) {
             val resolved = superClass.resolve()
             val decl = resolved.declaration as KSClassDeclaration
-            KspTypeMirror(KspClassTypeElement(decl, resolver, logger), resolver, logger)
+            KspTypeMirror(KspClassTypeElement(decl, resolver, logger), resolver, logger, resolved)
         } else {
             KspNoType(javax.lang.model.type.TypeKind.NONE)
         }
@@ -144,7 +150,8 @@ class KspClassTypeElement(
                     KspTypeMirror(
                         KspClassTypeElement(decl, resolver, logger),
                         resolver,
-                        logger
+                        logger,
+                        resolved
                     )
                 )
             }

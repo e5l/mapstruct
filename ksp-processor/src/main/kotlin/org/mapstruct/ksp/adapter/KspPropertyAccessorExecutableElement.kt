@@ -45,58 +45,16 @@ class KspPropertyAccessorExecutableElement(
     private val isSetter = accessor == property.setter
 
     companion object {
-        // Cache primitive type instances for reuse
-        private val primitiveTypeCache = mutableMapOf<javax.lang.model.type.TypeKind, KspPrimitiveType>()
-
         /**
          * Creates appropriate TypeMirror for a property type, handling primitive types.
-         * This ensures consistency with KspVariableElement's type handling.
+         * Delegates to KspTypeUtils to avoid duplicating primitive type handling logic.
          */
         private fun createTypeMirrorForProperty(
             property: KSPropertyDeclaration,
             resolver: Resolver,
             logger: KSPLogger
         ): TypeMirror {
-            val propType = property.type.resolve()
-            val decl = propType.declaration
-
-            if (decl !is KSClassDeclaration) {
-                return KspNoType(javax.lang.model.type.TypeKind.NONE)
-            }
-
-            // Check if this is a Kotlin built-in primitive type
-            // BUT: Only use primitive if NOT nullable (nullable types must be boxed in Java)
-            val builtins = resolver.builtIns
-            val ksType = decl.asStarProjectedType()
-            val isNullable = propType.isMarkedNullable
-
-            val primitiveKind = if (!isNullable) {
-                when (ksType) {
-                    builtins.booleanType -> javax.lang.model.type.TypeKind.BOOLEAN
-                    builtins.byteType -> javax.lang.model.type.TypeKind.BYTE
-                    builtins.shortType -> javax.lang.model.type.TypeKind.SHORT
-                    builtins.intType -> javax.lang.model.type.TypeKind.INT
-                    builtins.longType -> javax.lang.model.type.TypeKind.LONG
-                    builtins.charType -> javax.lang.model.type.TypeKind.CHAR
-                    builtins.floatType -> javax.lang.model.type.TypeKind.FLOAT
-                    builtins.doubleType -> javax.lang.model.type.TypeKind.DOUBLE
-                    else -> null
-                }
-            } else {
-                null // Nullable types are always boxed
-            }
-
-            return if (primitiveKind != null) {
-                // Return cached instance to ensure identity equality
-                primitiveTypeCache.getOrPut(primitiveKind) { KspPrimitiveType(primitiveKind) }
-            } else {
-                KspTypeMirror(
-                    KspClassTypeElement(decl, resolver, logger),
-                    resolver,
-                    logger,
-                    propType  // Pass the KSType to preserve type arguments
-                )
-            }
+            return KspTypeUtils.createTypeMirrorForType(property.type.resolve(), resolver, logger)
         }
     }
 
@@ -150,13 +108,15 @@ class KspPropertyAccessorExecutableElement(
     }
 
     override fun getSimpleName(): Name {
-        // Generate Java-style accessor name
+        // Generate Java-style accessor name.
+        // Kotlin properties named "isXxx" with boolean type generate "isXxx()" getters in JVM bytecode.
+        // However, MapStruct's DefaultAccessorNamingStrategy interprets "isXxx()" as property "xxx",
+        // losing the "is" prefix. Using "getIsXxx()" preserves the original Kotlin property name "isXxx"
+        // for MapStruct's property matching, which is the desired behavior for data class mappings.
         val propertyName = property.simpleName.asString()
         val accessorName = if (isGetter) {
-            // Convert property name to getPropertyName format
             "get${propertyName.replaceFirstChar { it.uppercase() }}"
         } else {
-            // Convert property name to setPropertyName format
             "set${propertyName.replaceFirstChar { it.uppercase() }}"
         }
         return StringName(accessorName)

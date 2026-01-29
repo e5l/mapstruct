@@ -15,7 +15,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import org.mapstruct.ap.internal.processor.ModelElementProcessor
-import org.mapstruct.ksp.adapter.KspProcessingEnvironmentAdapter
 import org.mapstruct.ksp.adapter.KspClassTypeElement
 import org.mapstruct.ksp.internal.processor.KspProcessorContext
 import java.util.ServiceLoader
@@ -44,19 +43,7 @@ class MapStructSymbolProcessor(
     // Deferred mappers from previous rounds (due to incomplete type hierarchies)
     private val deferredMappers: MutableSet<KSClassDeclaration> = mutableSetOf()
 
-    // Adapter to make KSP environment compatible with existing MapStruct infrastructure
-    private lateinit var processingEnvironmentAdapter: KspProcessingEnvironmentAdapter
-
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        // Initialize adapter on first round
-        if (!::processingEnvironmentAdapter.isInitialized) {
-            processingEnvironmentAdapter = KspProcessingEnvironmentAdapter(
-                environment = environment,
-                resolver = resolver,
-                logger = logger,
-            )
-        }
-
         // Process deferred mappers from previous rounds
         val stillDeferred = processDeferredMappers(resolver)
 
