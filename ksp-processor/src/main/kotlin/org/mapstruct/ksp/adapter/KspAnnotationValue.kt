@@ -16,28 +16,93 @@ class KspAnnotationValue(
     private val logger: KSPLogger? = null
 ) : AnnotationValue {
 
-    override fun getValue(): Any? = value
-
-    override fun <R : Any?, P : Any?> accept(v: AnnotationValueVisitor<R?, P?>?, p: P?): R? = when (value) {
-        is Boolean -> v?.visitBoolean(value, p)
-        is Byte -> v?.visitByte(value, p)
-        is Char -> v?.visitChar(value, p)
-        is Double -> v?.visitDouble(value, p)
-        is Float -> v?.visitFloat(value, p)
-        is Int -> v?.visitInt(value, p)
-        is Long -> v?.visitLong(value, p)
-        is Short -> v?.visitShort(value, p)
-        is String -> v?.visitString(value, p)
-        is List<*> -> {
-            // Convert list items to AnnotationValue objects
-            val annotationValues = value.map { item ->
-                when (item) {
-                    is AnnotationValue -> item
-                    else -> KspAnnotationValue(item, resolver, logger)
+    override fun getValue(): Any? {
+        // Convert KSP types to javax.lang.model types when getValue() is called.
+        // MapStruct gems call getValue() directly expecting TypeMirror for class values,
+        // not the raw KSType that KSP provides.
+        return when {
+            // KSP represents enum entries as KSClassDeclaration with ENUM_ENTRY kind
+            value is KSClassDeclaration && value.classKind == com.google.devtools.ksp.symbol.ClassKind.ENUM_ENTRY -> {
+                if (resolver != null && logger != null) {
+                    KspEnumConstantElement(value, resolver, logger)
+                } else {
+                    value
                 }
             }
-            v?.visitArray(annotationValues, p)
+            // KSType representing enum values
+            value is KSType && value.declaration is KSClassDeclaration &&
+                    (value.declaration as KSClassDeclaration).classKind == com.google.devtools.ksp.symbol.ClassKind.ENUM_ENTRY -> {
+                if (resolver != null && logger != null) {
+                    val decl = value.declaration as KSClassDeclaration
+                    KspEnumConstantElement(decl, resolver, logger)
+                } else {
+                    value
+                }
+            }
+            // KSType representing class values (e.g., Car::class in annotations)
+            value is KSType -> {
+                if (resolver != null && logger != null) {
+                    val decl = value.declaration
+                    if (decl is KSClassDeclaration) {
+                        KspTypeMirror(KspClassTypeElement(decl, resolver, logger), resolver, logger)
+                    } else {
+                        value
+                    }
+                } else {
+                    value
+                }
+            }
+            // KSClassDeclaration representing class values (non-enum)
+            value is KSClassDeclaration -> {
+                if (resolver != null && logger != null) {
+                    KspTypeMirror(KspClassTypeElement(value, resolver, logger), resolver, logger)
+                } else {
+                    value
+                }
+            }
+            // KSAnnotation representing nested annotations
+            value is KSAnnotation -> {
+                if (resolver != null && logger != null) {
+                    KspAnnotationMirror(value, resolver, logger)
+                } else {
+                    value
+                }
+            }
+            // Lists need to return List<AnnotationValue> per JavaDoc.
+            // Each element stays wrapped in AnnotationValue - do NOT call .getValue() on items.
+            value is List<*> -> {
+                value.map { item ->
+                    when (item) {
+                        is AnnotationValue -> item
+                        else -> KspAnnotationValue(item, resolver, logger)
+                    }
+                }
+            }
+            // Primitive types and strings are returned as-is
+            else -> value
         }
+    }
+
+    override fun <R : Any?, P : Any?> accept(v: AnnotationValueVisitor<R?, P?>?, p: P?): R? = when (value) {
+            is Boolean -> v?.visitBoolean(value, p)
+            is Byte -> v?.visitByte(value, p)
+            is Char -> v?.visitChar(value, p)
+            is Double -> v?.visitDouble(value, p)
+            is Float -> v?.visitFloat(value, p)
+            is Int -> v?.visitInt(value, p)
+            is Long -> v?.visitLong(value, p)
+            is Short -> v?.visitShort(value, p)
+            is String -> v?.visitString(value, p)
+            is List<*> -> {
+                // Convert list items to AnnotationValue objects
+                val annotationValues = value.map { item ->
+                    when (item) {
+                        is AnnotationValue -> item
+                        else -> KspAnnotationValue(item, resolver, logger)
+                    }
+                }
+                v?.visitArray(annotationValues, p)
+            }
         // KSP represents enum entries as KSClassDeclaration
         is KSClassDeclaration if value.classKind == com.google.devtools.ksp.symbol.ClassKind.ENUM_ENTRY -> {
             if (resolver != null && logger != null) {

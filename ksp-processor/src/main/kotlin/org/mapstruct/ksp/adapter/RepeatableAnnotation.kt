@@ -36,7 +36,8 @@ internal class RepeatableAnnotation(
         val decl = annotation.declaration
         if (decl is KSClassDeclaration) {
             // Find the "value" method in the container annotation
-            val valueMethod = decl.declarations.firstOrNull { it.simpleName.asString() == "value" }
+            val allDeclarations = decl.declarations.toList()
+            val valueMethod = allDeclarations.firstOrNull { it.simpleName.asString() == "value" }
             check(valueMethod != null) {
                 "Could not find 'value' method in container annotation ${decl.qualifiedName?.asString()}"
             }

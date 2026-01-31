@@ -112,6 +112,13 @@ class KspTypes(
     override fun isSubtype(
         t1: TypeMirror,
         t2: TypeMirror
+    ): Boolean {
+        return isSubtypeImpl(t1, t2)
+    }
+
+    private fun isSubtypeImpl(
+        t1: TypeMirror,
+        t2: TypeMirror
     ): Boolean = when {
         isSameType(t1, t2) -> true
         t1 is KspNoType || t2 is KspNoType -> {
@@ -133,7 +140,7 @@ class KspTypes(
                     if (c1 is KspPrimitiveType || c2 is KspPrimitiveType) {
                         isSameType(c1, c2)
                     } else {
-                        isSubtype(c1, c2)
+                        isSubtypeImpl(c1, c2)
                     }
                 }
                 t2 is KspTypeMirror -> {
@@ -169,7 +176,7 @@ class KspTypes(
                             when {
                                 upperBoundElement != null -> {
                                     val upperBoundMirror = KspTypeMirror(KspClassTypeElement(upperBoundElement, resolver, logger), resolver, logger)
-                                    isSubtype(upperBoundMirror, t2)
+                                    isSubtypeImpl(upperBoundMirror, t2)
                                 }
                                 else -> false
                             }

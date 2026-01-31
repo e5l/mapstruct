@@ -34,14 +34,13 @@ class KspAnnotationMirror(
     }
 
     override fun getElementValues(): Map<ExecutableElement, AnnotationValue> {
+        val annoTypeDecl = annotation.annotationType.resolve().declaration
         val result = mutableMapOf<ExecutableElement, AnnotationValue>()
 
         for (argument in annotation.arguments) {
             if (argument.isDefault()) continue
-
             val name = argument.name?.asString() ?: continue
 
-            val annoTypeDecl = annotation.annotationType.resolve().declaration
             when (annoTypeDecl) {
                 is KSClassDeclaration -> {
                     val method = annoTypeDecl.declarations.firstOrNull { func -> func.simpleName.asString() == name }

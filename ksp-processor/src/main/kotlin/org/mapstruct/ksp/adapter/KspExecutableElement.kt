@@ -203,7 +203,9 @@ class KspExecutableElement(
         }
     }
 
-    override fun getSimpleName(): Name = StringName(declaration.simpleName.asString())
+    override fun getSimpleName(): Name {
+        return StringName(declaration.simpleName.asString())
+    }
 
     override fun getEnclosingElement(): Element {
         val parent = declaration.parentDeclaration
@@ -221,8 +223,7 @@ class KspExecutableElement(
     }
 
     private val _annotationMirrors by lazy {
-        val annotations = declaration.annotations.toList()
-        toAnnotationMirrors(annotations, resolver, logger)
+        toAnnotationMirrors(declaration.annotations.toList(), resolver, logger)
     }
 
     override fun getAnnotationMirrors(): List<AnnotationMirror> = _annotationMirrors
@@ -316,4 +317,44 @@ class KspExecutableElement(
     override fun <R : Any?, P : Any?> accept(v: ElementVisitor<R?, P?>?, p: P?): R? = v?.visitExecutable(this, p)
 
     override fun toString(): String = "KspExecutableElement[${declaration.simpleName.asString()}]"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ExecutableElement) return false
+
+        // Compare by simple name and enclosing element's qualified name
+        val otherName = other.simpleName?.toString() ?: return false
+        val thisName = declaration.simpleName.asString()
+        if (thisName != otherName) {
+            return false
+        }
+
+        // Compare enclosing element
+        val thisEnclosing = declaration.parentDeclaration
+        val otherEnclosing = other.enclosingElement
+        if (thisEnclosing == null || otherEnclosing == null) {
+            return false
+        }
+
+        val thisEnclosingName = when (thisEnclosing) {
+            is com.google.devtools.ksp.symbol.KSClassDeclaration -> thisEnclosing.qualifiedName?.asString()
+            else -> null
+        }
+        val otherEnclosingName = when (otherEnclosing) {
+            is javax.lang.model.element.TypeElement -> otherEnclosing.qualifiedName?.toString()
+            is KspClassTypeElement -> otherEnclosing.qualifiedName?.toString()
+            else -> null
+        }
+
+        return thisEnclosingName == otherEnclosingName
+    }
+
+    override fun hashCode(): Int {
+        val name = declaration.simpleName.asString()
+        val enclosingName = when (val parent = declaration.parentDeclaration) {
+            is com.google.devtools.ksp.symbol.KSClassDeclaration -> parent.qualifiedName?.asString() ?: ""
+            else -> ""
+        }
+        return 31 * name.hashCode() + enclosingName.hashCode()
+    }
 }

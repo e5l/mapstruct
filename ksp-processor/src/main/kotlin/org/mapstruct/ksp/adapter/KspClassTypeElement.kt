@@ -106,7 +106,9 @@ class KspClassTypeElement(
         elements
     }
 
-    override fun getEnclosedElements(): List<Element> = _enclosedElements
+    override fun getEnclosedElements(): List<Element> {
+        return _enclosedElements
+    }
 
     override fun getNestingKind(): NestingKind {
         return when {
@@ -179,6 +181,23 @@ class KspClassTypeElement(
 
     override fun getInterfaces(): List<TypeMirror> = _interfaces
 
+    private val _permittedSubclasses: List<TypeMirror> by lazy {
+        // For Kotlin sealed classes, get the permitted subclasses (direct subclasses)
+        if (KspModifier.SEALED in declaration.modifiers) {
+            declaration.getSealedSubclasses().map { subclass ->
+                KspTypeMirror(
+                    KspClassTypeElement(subclass, resolver, logger),
+                    resolver,
+                    logger
+                )
+            }.toList()
+        } else {
+            emptyList()
+        }
+    }
+
+    override fun getPermittedSubclasses(): List<TypeMirror> = _permittedSubclasses
+
     private val _typeParameters: List<TypeParameterElement> by lazy {
         declaration.typeParameters.map { typeParam ->
             KspTypeParameterElement(typeParam, resolver, logger)
@@ -213,6 +232,12 @@ class KspClassTypeElement(
         if (KspModifier.PROTECTED in declaration.modifiers) modifiers.add(Modifier.PROTECTED)
         if (KspModifier.ABSTRACT in declaration.modifiers) modifiers.add(Modifier.ABSTRACT)
         if (KspModifier.FINAL in declaration.modifiers) modifiers.add(Modifier.FINAL)
+        // SEALED modifier for Kotlin sealed classes (Java 17+)
+        // Sealed classes are implicitly abstract, so add both SEALED and ABSTRACT
+        if (KspModifier.SEALED in declaration.modifiers) {
+            modifiers.add(Modifier.SEALED)
+            modifiers.add(Modifier.ABSTRACT)
+        }
 
         return modifiers
     }
